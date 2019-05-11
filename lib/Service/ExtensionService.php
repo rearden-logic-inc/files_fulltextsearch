@@ -35,6 +35,7 @@ use OCA\Files_FullTextSearch\Model\FilesDocument;
 use OCP\FullTextSearch\Model\ISearchRequest;
 use OCP\Files\Node;
 use OCP\FullTextSearch\Model\ISearchResult;
+use OCP\FullTextSearch\Model\SearchTemplate;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
@@ -46,6 +47,10 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  */
 class ExtensionService {
 
+    const FILE_INDEXING_EVENT = '\OCA\Files_FullTextSearch::onFileIndexing';
+    const SEARCH_TEMPLATE_REQUEST_EVENT = '\OCA\Files_FullTextSearch::onSearchTemplateRequest';
+    const SEARCH_REQUEST_EVENT = '\OCA\Files_FullTextSearch::onSearchRequest';
+    const SEARCH_RESULT_EVENT = '\OCA\Files_FullTextSearch::onSearchResult';
 
 	/** @var EventDispatcher */
 	private $eventDispatcher;
@@ -79,10 +84,20 @@ class ExtensionService {
 	 */
 	public function fileIndexing(FilesDocument &$document, Node $file) {
 		$this->dispatch(
-			'\OCA\Files_FullTextSearch::onFileIndexing',
+			self::FILE_INDEXING_EVENT,
 			['file' => $file, 'document' => &$document]
 		);
 	}
+
+    /**
+     * @param SearchTemplate $searchTemplate
+     */
+	public function searchTemplateRequest(SearchTemplate &$searchTemplate) {
+	    $this->dispatch(
+            self::SEARCH_TEMPLATE_REQUEST_EVENT,
+            ['searchTemplate' => &$searchTemplate]
+        );
+    }
 
 
 	/**
@@ -90,7 +105,7 @@ class ExtensionService {
 	 */
 	public function searchRequest(ISearchRequest &$request) {
 		$this->dispatch(
-			'\OCA\Files_FullTextSearch::onSearchRequest',
+			self::SEARCH_REQUEST_EVENT,
 			['request' => &$request]
 		);
 	}
@@ -101,7 +116,7 @@ class ExtensionService {
 	 */
 	public function searchResult(ISearchResult &$result) {
 		$this->dispatch(
-			'\OCA\Files_FullTextSearch::onSearchResult',
+			self::SEARCH_RESULT_EVENT,
 			['result' => &$result]
 		);
 	}

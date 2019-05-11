@@ -37,6 +37,7 @@ use OCA\Files_FullTextSearch\Service\ConfigService;
 use OCA\Files_FullTextSearch\Service\FilesService;
 use OCA\Files_FullTextSearch\Service\MiscService;
 use OCA\Files_FullTextSearch\Service\SearchService;
+use OCA\Files_FullTextSearch\Service\SearchTemplateService;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
@@ -47,9 +48,7 @@ use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\IRunner;
 use OCP\FullTextSearch\Model\ISearchRequest;
 use OCP\FullTextSearch\Model\ISearchResult;
-use OCP\FullTextSearch\Model\SearchOption;
 use OCP\FullTextSearch\Model\SearchTemplate;
-use OCP\IL10N;
 
 
 /**
@@ -59,12 +58,7 @@ use OCP\IL10N;
  */
 class FilesProvider implements IFullTextSearchProvider {
 
-
 	const FILES_PROVIDER_ID = 'files';
-
-
-	/** @var IL10N */
-	private $l10n;
 
 	/** @var ConfigService */
 	private $configService;
@@ -78,6 +72,9 @@ class FilesProvider implements IFullTextSearchProvider {
 	/** @var MiscService */
 	private $miscService;
 
+	/** @var SearchTemplateService */
+	private $searchTemplateService;
+
 	/** @var IRunner */
 	private $runner;
 
@@ -85,15 +82,14 @@ class FilesProvider implements IFullTextSearchProvider {
 	private $indexOptions = [];
 
 
-	public function __construct(
-		IL10N $l10n, ConfigService $configService, FilesService $filesService,
-		SearchService $searchService, MiscService $miscService
+	public function __construct(ConfigService $configService, FilesService $filesService,
+		SearchService $searchService, SearchTemplateService $searchTemplateService, MiscService $miscService
 	) {
-		$this->l10n = $l10n;
 		$this->configService = $configService;
 		$this->filesService = $filesService;
 		$this->searchService = $searchService;
 		$this->miscService = $miscService;
+		$this->searchTemplateService = $searchTemplateService;
 	}
 
 
@@ -141,71 +137,7 @@ class FilesProvider implements IFullTextSearchProvider {
 	 * @return SearchTemplate
 	 */
 	public function getSearchTemplate(): SearchTemplate {
-		$template = new SearchTemplate('icon-fts-files', 'fulltextsearch');
-
-		$template->addPanelOption(
-			new SearchOption(
-				'files_within_dir', $this->l10n->t('Within current directory'),
-				SearchOption::CHECKBOX
-			)
-		);
-
-		$template->addPanelOption(
-			new SearchOption(
-				'files_local', $this->l10n->t('Within local files'),
-				SearchOption::CHECKBOX
-			)
-		);
-		$template->addNavigationOption(
-			new SearchOption(
-				'files_local', $this->l10n->t('Local files'),
-				SearchOption::CHECKBOX
-			)
-		);
-
-		if ($this->configService->getAppValue(ConfigService::FILES_EXTERNAL) === '1') {
-			$template->addPanelOption(
-				new SearchOption(
-					'files_external', $this->l10n->t('Within external files'),
-					SearchOption::CHECKBOX
-				)
-			);
-			$template->addNavigationOption(
-				new SearchOption(
-					'files_external', $this->l10n->t('External files'), SearchOption::CHECKBOX
-				)
-			);
-		}
-
-		if ($this->configService->getAppValue(ConfigService::FILES_GROUP_FOLDERS) === '1') {
-			$template->addPanelOption(
-				new SearchOption(
-					'files_group_folders', $this->l10n->t('Within group folders'),
-					SearchOption::CHECKBOX
-				)
-			);
-			$template->addNavigationOption(
-				new SearchOption(
-					'files_group_folders', $this->l10n->t('Group folders'),
-					SearchOption::CHECKBOX
-				)
-			);
-		}
-
-		$template->addPanelOption(
-			new SearchOption(
-				'files_extension', $this->l10n->t('Filter by extension'), SearchOption::INPUT,
-				SearchOption::INPUT_SMALL, 'txt'
-			)
-		);
-		$template->addNavigationOption(
-			new SearchOption(
-				'files_extension', $this->l10n->t('Extension'), SearchOption::INPUT,
-				SearchOption::INPUT_SMALL, 'txt'
-			)
-		);
-
-		return $template;
+		return $this->searchTemplateService->buildSearchTemplate();
 	}
 
 
