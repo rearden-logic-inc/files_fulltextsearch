@@ -269,6 +269,12 @@ class FilesService {
 		$files = $node->getDirectoryListing();
 		foreach ($files as $file) {
 
+            if ($file->getType() === FileInfo::TYPE_FOLDER) {
+                /** @var $file Folder */
+                $documents =
+                    array_merge($documents, $this->getFilesFromDirectory($userId, $file));
+            }
+
 			try {
 				$documents[] = $this->generateFilesDocumentFromFile($userId, $file);
 				$this->sumDocuments++;
@@ -276,11 +282,6 @@ class FilesService {
 				continue;
 			}
 
-			if ($file->getType() === FileInfo::TYPE_FOLDER) {
-				/** @var $file Folder */
-				$documents =
-					array_merge($documents, $this->getFilesFromDirectory($userId, $file));
-			}
 		}
 
 		return $documents;
@@ -307,7 +308,9 @@ class FilesService {
 
 		if ($file->getId() === -1) {
 			throw new FileIsNotIndexableException();
-		}
+		} else if ($file->getType() == File::TYPE_FOLDER) {
+		    throw new FileIsNotIndexableException('File is Folder');
+        }
 
 		$ownerId = '';
 		if ($file->getOwner() !== null) {
