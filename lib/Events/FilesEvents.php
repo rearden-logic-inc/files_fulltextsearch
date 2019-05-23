@@ -35,6 +35,7 @@ use daita\MySmallPhpTools\Traits\TArrayTools;
 use OCA\Files_FullTextSearch\Service\ConfigService;
 use OCA\Files_FullTextSearch\Service\FilesService;
 use OCA\Files_FullTextSearch\Service\MiscService;
+use OCA\FullTextSearch\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\AppFramework\QueryException;
 use OCP\Comments\CommentsEvent;
@@ -42,7 +43,6 @@ use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\FullTextSearch\IFullTextSearchManager;
 use OCP\FullTextSearch\Model\IIndex;
-use Symfony\Component\EventDispatcher\GenericEvent;
 
 
 /**
@@ -74,6 +74,9 @@ class FilesEvents {
 	/** @var MiscService */
 	private $miscService;
 
+	/** @var bool|null If the service has registered with NextCloud or not */
+	private $registered = null;
+
 
 	/**
 	 * FilesEvents constructor.
@@ -103,17 +106,20 @@ class FilesEvents {
 	 */
 	private function registerFullTextSearchServices() {
 
-		if (!$this->appManager->isInstalled('fulltextsearch')
-			|| !class_exists('\OCA\FullTextSearch\AppInfo\Application')) {
-			$this->miscService->log('fulltextsearch not installed', 1);
+	    if (is_null($this->registered)) {
+            if (!$this->appManager->isInstalled('fulltextsearch')
+                || !class_exists('\OCA\FullTextSearch\AppInfo\Application')) {
+                $this->miscService->log('fulltextsearch not installed', 1);
 
-			return false;
-		}
+                $this->registered = false;
+            }
 
-		$fulltextsearch = new \OCA\FullTextSearch\AppInfo\Application();
-		$fulltextsearch->registerServices();
+            $fulltextsearch = new Application();
+            $fulltextsearch->registerServices();
+            $this->registered = true;
+        }
 
-		return true;
+		return  $this->registered;
 	}
 
 
